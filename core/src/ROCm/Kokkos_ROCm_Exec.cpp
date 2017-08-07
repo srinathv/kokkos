@@ -49,17 +49,13 @@
 //#include <ROCm/Kokkos_ROCmExec.hpp>
 #include <hc.hpp>
 
-#define ROCM_SPACE_ATOMIC_MASK      0x1FFFF
-#define ROCM_SPACE_ATOMIC_XOR_MASK  0x15A39
-#define ROCM_CONCURRENCY 20480
-//#define ROCM_CONCURRENCY 81920  # for fiji
 
+#if 0
 namespace Kokkos {
   static int rocm_space_atomic_locks[ROCM_SPACE_ATOMIC_MASK+1];
   static int rocm_space_scratch_locks[ROCM_CONCURRENCY];
   static int rocm_space_threadid_locks[ROCM_CONCURRENCY];
 namespace Impl {
-// TODO: mimic cuda implemtation, add dgpu capability
 
   void init_rocm_atomic_lock_array() {
     static int is_initialized = 0;
@@ -99,6 +95,7 @@ namespace Impl {
 }
 
 } // namespace Kokkos
+#endif 
 #if 0
 namespace Kokkos {
 namespace Impl {

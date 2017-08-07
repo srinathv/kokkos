@@ -110,7 +110,8 @@ namespace Impl {
 void * rocm_device_allocate(int);
 void * rocm_hostpinned_allocate(int);
 void rocm_device_free(void * );
-
+void rocm_device_synchronize();
+#if 0
 /// \brief Initialize lock array for arbitrary size atomics.
 ///
 /// Arbitrary atomics are implemented using a hash table of locks
@@ -143,6 +144,7 @@ int* scratch_lock_array_rocm_space_ptr(bool deallocate = false);
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
 int* threadid_lock_array_rocm_space_ptr(bool deallocate = false);
+#endif
 }
 } // namespace Kokkos
 
@@ -264,6 +266,8 @@ struct MemorySpaceAccess< Kokkos::Experimental::ROCmHostPinnedSpace , Kokkos::Ex
 
 namespace Kokkos {
 namespace Impl {
+
+void rocm_copy( const void * src, void * dst , size_t n );
 
 hc::completion_future DeepCopyAsyncROCm( void * dst , const void * src , size_t n);
 

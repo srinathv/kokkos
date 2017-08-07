@@ -43,6 +43,7 @@
 
 #include <hc.hpp>
 //#include <hsa_atomic.h>
+#include <ROCm/Kokkos_ROCm_Locks.hpp>
 
 #ifdef KOKKOS_ENABLE_ROCM_ATOMICS
 namespace Kokkos {
@@ -392,8 +393,40 @@ namespace Kokkos {
   //WORKAROUND
   template<class T>
   KOKKOS_INLINE_FUNCTION
-  T atomic_fetch_add(volatile T* dest, typename std::enable_if<sizeof(T) != sizeof(int) && sizeof(T) != sizeof(int64_t), const T&>::type val) {
-    return val ;
+  T atomic_fetch_add(volatile T* dest, typename std::enable_if<
+                                      sizeof(T) != sizeof(int) && 
+                                      sizeof(T) != sizeof(int64_t),
+                                      const T&>::type val) {
+    T return_val;
+    // This is a way to avoid dead lock in a workgroup
+    int done = 0;
+#if 0
+    auto active = hc::__ballot(1);
+    auto done_active = 0;
+    while (active!=done_active) {
+      if(!done) {
+        bool locked = Impl::lock_address_rocm_space( (void*) dest );
+        if( locked ) {
+          return_val = *dest;
+          *dest = return_val + val;
+          Impl::unlock_address_rocm_space( (void*) dest );
+          done = 1;
+        }
+      }
+      done_active = hc::__ballot(done);
+    }
+#else
+union {
+double f;
+std::size_t i;
+} re;
+re.i = Impl::return_address_rocm_space((void*) dest);
+      return_val.real() = re.f;
+//      return_val.real() = Impl::return_address_rocm_space((void*) dest);
+//      return_val = (T) 7;
+      *dest = return_val ;
+#endif
+    return return_val;
   }
 
   template<class T>

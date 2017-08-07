@@ -70,98 +70,83 @@ namespace Kokkos {
 namespace Impl {
 using namespace hc;
 
-DeepCopy<Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
+void rocm_copy( const void * src, void * dst , size_t n )
 {
    hc::accelerator acc;
    hc::accelerator_view av = acc.get_default_view();
    av.copy( src , dst , n);
+}
+
+DeepCopy<Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
+{
+   rocm_copy( src , dst , n);
 }
 
 
 DeepCopy<HostSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+//printf("rocm_copy 1 %p -> %p, %ld\n",src,dst,n);
+   rocm_copy( src , dst , n);
 }
 
 DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+//printf("rocm_copy 2 %p -> %p, %ld\n",src,dst,n);
+   rocm_copy( src , dst , n);
 }
 
 DeepCopy<Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 DeepCopy<HostSpace,Kokkos::Experimental::ROCmSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 DeepCopy<Kokkos::Experimental::ROCmSpace,HostSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 
 
 DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 
 DeepCopy<HostSpace,Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,HostSpace,Kokkos::Experimental::ROCm>::DeepCopy( void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 DeepCopy<HostSpace,Kokkos::Experimental::ROCmHostPinnedSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 DeepCopy<Kokkos::Experimental::ROCmHostPinnedSpace,HostSpace,Kokkos::Experimental::ROCm>::DeepCopy( const Kokkos::Experimental::ROCm & instance , void * dst , const void * src , size_t n )
 {
-   hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
-   av.copy( src , dst , n);
+   rocm_copy( src , dst , n);
 }
 
 
 hc::completion_future DeepCopyAsyncROCm( void * dst , const void * src , size_t n) {
    hc::accelerator acc;
-   hc::accelerator_view av = acc.get_default_view();
+   hc::accelerator_view av= acc.get_default_view();
    return(av.copy_async( src , dst , n));
 }
 
@@ -614,7 +599,7 @@ print_records( std::ostream & s , const Kokkos::Experimental::ROCmSpace & space 
     } while ( r != & s_root_record );
   }
 }
-#if 0
+#if 1
 void
 SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace , void >::
 print_records( std::ostream & s , const Kokkos::Experimental::ROCmHostPinnedSpace & space , bool detail )

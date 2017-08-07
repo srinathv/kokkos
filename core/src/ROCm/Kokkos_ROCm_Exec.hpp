@@ -80,11 +80,12 @@ struct ROCmTraits {
 size_t rocm_internal_cu_count();
 size_t rocm_internal_maximum_workgroup_count();
 
-size_t * rocm_internal_scratch_flags( const size_t size );
-size_t * rocm_internal_scratch_space( const size_t size );
+//size_t * rocm_internal_scratch_flags( const size_t size );
+//size_t * rocm_internal_scratch_space( const size_t size );
 
 }
 } // namespace Kokkos
+#if 0
 #define ROCM_SPACE_ATOMIC_MASK      0x1FFFF
 #define ROCM_SPACE_ATOMIC_XOR_MASK  0x15A39
 //int rocm_space_atomic_locks[ROCM_SPACE_ATOMIC_MASK+1];
@@ -123,15 +124,5 @@ Kokkos::Impl::unlock_address_host_space(ptr) ;
 
 }
 } // namespace Kokkos
-
-namespace Kokkos {
-namespace Impl {
-//extern 
-//KOKKOS_INLINE_FUNCTION
-//void init_lock_arrays_rocm_space(); 
-
-
-}
-} // namespace Kokkos
-
+#endif
 #endif /* #ifndef KOKKOS_ROCMEXEC_HPP */

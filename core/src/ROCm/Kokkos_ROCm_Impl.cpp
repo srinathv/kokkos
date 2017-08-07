@@ -52,7 +52,7 @@
 //#include <ROCm/Kokkos_ROCm_Internal.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_ROCmSpace.hpp>
-#include <ROCm/Kokkos_ROCm_Exec.hpp>
+#include <ROCm/Kokkos_ROCm_Locks.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */
@@ -73,6 +73,9 @@
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
 namespace Impl {
+
+//ROCmLockArrays * g_device_rocm_lock_arrays;
+//ROCmLockArrays g_host_rocm_lock_arrays = { nullptr, nullptr, 0 };
 
 #if 0
 namespace {
@@ -135,7 +138,7 @@ void rocm_device_free(void * ptr)
 }
 
 
-KOKKOS_INLINE_FUNCTION
+//KOKKOS_INLINE_FUNCTION
 void rocm_device_synchronize()
 {
    hc::accelerator_view av = hc::accelerator().get_default_view();
@@ -524,15 +527,8 @@ void ROCmInternal::initialize( int rocm_device_id  )
     Kokkos::Impl::throw_runtime_exception( msg.str() );
   }
 
-
   // Init the array for used for arbitrarily sized atomics
-  Kokkos::Impl::init_lock_arrays_rocm_space();
-
-//  Kokkos::Impl::ROCmLockArraysStruct locks;
-//  locks.atomic = atomic_lock_array_rocm_space_ptr(false);
-//  locks.scratch = scratch_lock_array_rocm_space_ptr(false);
-//  locks.threadid = threadid_lock_array_rocm_space_ptr(false);
-//  rocmMemcpyToSymbol( kokkos_impl_rocm_lock_arrays , & locks , sizeof(ROCmLockArraysStruct) );
+  Kokkos::Impl::initialize_host_rocm_lock_arrays();
 }
 
 //----------------------------------------------------------------------------
@@ -615,8 +611,10 @@ void ROCmInternal::finalize()
 //    scratch_lock_array_rocm_space_ptr(false);
 //    threadid_lock_array_rocm_space_ptr(false);
 
-    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< HostSpace > RecordROCm ;
-    typedef Kokkos::Experimental::Impl::SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace > RecordHost ;
+    typedef Kokkos::Impl::SharedAllocationRecord< HostSpace > RecordROCm ;
+    typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::ROCmHostPinnedSpace > RecordHost ;
+
+    Kokkos::Impl::initialize_host_rocm_lock_arrays();
 
     RecordROCm::decrement( RecordROCm::get_record( m_scratchFlags ) );
     RecordROCm::decrement( RecordROCm::get_record( m_scratchSpace ) );
@@ -663,12 +661,10 @@ namespace Experimental {
 //{ return Impl::ROCmInternalDevices::singleton().m_rocmDevCount ; }
 
 int ROCm::concurrency() {
-#if defined(KOKKOS_ARCH_KAVERI) 
-  return 8*64*40;  // 20480 kaveri
-#else
-  return 32*8*40;  // 81920 fiji and hawaii
-#endif
+hc::accelerator a;
+  return a.get_cu_count()*64*40; // valid for gcn3 
 }
+
 int ROCm::is_initialized()
 { return Kokkos::Impl::ROCmInternal::singleton().is_initialized(); }
 

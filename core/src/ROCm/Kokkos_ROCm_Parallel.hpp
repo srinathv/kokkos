@@ -534,12 +534,23 @@ public:
 // properly dereference f inside the pfe.
 auto foo = [=](size_t i){rocm_invoke<typename Policy::work_tag>(f, i);};
 
+//void * laptr = (void *)g_device_rocm_lock_arrays;
+void * laptr = (void *)g_host_rocm_lock_arrays.atomic;
+void * lsptr = (void *)g_host_rocm_lock_arrays.scratch;
+std::size_t ln = g_host_rocm_lock_arrays.n;
+
 #if __hcc_workweek__ > 16600
       hc::parallel_for_each(hc::extent<1>(len) , [=](const hc::index<1> & idx) [[hc]]  [[hc_max_workgroup_dim(1024,1,1)]]
 #else
       hc::parallel_for_each(hc::extent<1>(len).tile(256) , [=](const hc::index<1> & idx) [[hc]]
 #endif
       {
+std::size_t * ptr = (std::size_t *)hc::get_group_segment_base_pointer();
+*ptr = (std::size_t)laptr;
+ptr += sizeof(std::int32_t *);
+*ptr = (std::size_t)lsptr;
+ptr += sizeof(std::int32_t *);
+*ptr =  ln;
         if(idx[0]<len)  // workaround for Carrizo (and Fiji?)
           foo(idx[0] + offset);
       }).wait();
