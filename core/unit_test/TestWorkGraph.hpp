@@ -114,6 +114,7 @@ struct TestWorkGraph {
 
   void form_graph() {
     auto hg = form_host_graph();
+    std::cerr << "created " << hg.size() << " total tasks\n";
     m_graph.row_map = RowMap("row_map", hg.size() + 1); // row map always has one more
     m_graph.entries = Entries("entries", hg.size() - 1); // all but the first have a parent
     m_values = Values("values", hg.size());
@@ -160,6 +161,7 @@ TEST_F( TEST_CATEGORY, workgraph_fib )
 {
   int limit = 27;
   for ( int i = 0; i < limit; ++i) {
+    std::cerr << "workgraph test i = " << i << '\n';
     TestWorkGraph< TEST_EXECSPACE > f(i);
     f.test_for();
   }

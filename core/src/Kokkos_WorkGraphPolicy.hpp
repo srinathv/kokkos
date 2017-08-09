@@ -44,6 +44,8 @@
 #ifndef KOKKOS_WORKGRAPHPOLICY_HPP
 #define KOKKOS_WORKGRAPHPOLICY_HPP
 
+#include <cstdio>
+
 namespace Kokkos {
 namespace Impl {
 namespace Experimental {
@@ -127,7 +129,7 @@ private:
   KOKKOS_INLINE_FUNCTION
   std::int32_t pop_work() const {
     range_type w(-1,-1);
-    while (true) {
+    for (long ntries = 0; true; ++ntries) {
       const range_type w_new( w.first + 1 , w.second );
       w = atomic_compare_exchange( &m_ranges(0) , w , w_new );
       if ( w.first < w.second ) { // there was work in the queue
@@ -141,11 +143,12 @@ private:
           return i;
         } // we got a work item
       } else { // there was no work in the queue
-#ifdef KOKKOS_DEBUG
+        if (ntries && ((ntries % (10 * 1000)) == 0)) printf("w is (%d, %d), m_total_work = %d\n", w.first, w.second, m_total_work);
+//#ifdef KOKKOS_DEBUG
         if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
           Kokkos::abort("bug in pop_work");
         }
-#endif
+//#endif
         if (w.first == m_total_work) { // all work is done
           return -1;
         } else { // need to wait for more work to be pushed
