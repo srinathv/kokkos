@@ -86,9 +86,20 @@ public:
 
     #pragma omp parallel num_threads(pool_size)
     {
-      for (std::int32_t i; (-1 != (i = Base::before_work())); ) {
+      std::int32_t i;
+      while (0 <= (i = Base::before_work())) {
         exec_one< typename Policy::work_tag >( i );
         Base::after_work(i);
+      }
+      #pragma omp barrier
+      if (i == -42 && 0 == omp_get_thread_num()) {
+        int nzeros = 0;
+        for (std::size_t j = 0; j < Base::m_policy.m_counts.size(); ++j) {
+          auto count = Base::m_policy.m_counts(j);
+          if (count == 0) ++nzeros;
+          else std::cerr << "m_counts(" << j << ") = " << count << '\n';
+        }
+        std::cerr << nzeros << " entries in m_counts are zero\n";
       }
     }
   }

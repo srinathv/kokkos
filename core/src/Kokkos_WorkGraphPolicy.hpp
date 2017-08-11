@@ -80,7 +80,9 @@ private:
   using range_type = Kokkos::pair<std::int32_t, std::int32_t>;
   using ranges_type = Kokkos::View<range_type*, memory_space>;
   const std::int32_t m_total_work;
+public:
   ints_type m_counts;
+private:
   ints_type m_queue;
   ranges_type m_ranges;
 
@@ -132,6 +134,7 @@ private:
     for (long ntries = 0; true; ++ntries) {
       const range_type w_new( w.first + 1 , w.second );
       w = atomic_compare_exchange( &m_ranges(0) , w , w_new );
+      if (ntries && ((ntries % (50 * 1000)) == 0)) { printf("w is (%d, %d), m_debug_pushed = %d\n", w.first, w.second, m_debug_pushed()); return -42; }
       if ( w.first < w.second ) { // there was work in the queue
         if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
           // we got a work item
@@ -143,11 +146,10 @@ private:
           return i;
         } // we got a work item
       } else { // there was no work in the queue
-        if (ntries && ((ntries % (10 * 1000)) == 0)) printf("w is (%d, %d), m_total_work = %d\n", w.first, w.second, m_total_work);
 //#ifdef KOKKOS_DEBUG
-        if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
-          Kokkos::abort("bug in pop_work");
-        }
+//      if ( w_new.first == w.first + 1 && w_new.second == w.second ) {
+//        Kokkos::abort("bug in pop_work");
+//      }
 //#endif
         if (w.first == m_total_work) { // all work is done
           return -1;
@@ -175,6 +177,7 @@ private:
     // write the work index into the claimed spot in the queue
     *((volatile std::int32_t*)(&m_queue( w.second ))) = i;
     // push this write out into the memory system
+    atomic_increment(&m_debug_pushed());
     memory_fence();
   }
 
@@ -183,9 +186,12 @@ private:
 
 public:
 
+  Kokkos::View<int, execution_space> m_debug_pushed;
+
   WorkGraphPolicy(graph_type arg_graph)
     : m_graph(arg_graph)
     , m_total_work( arg_graph.numRows() )
+    , m_debug_pushed( "debug_pushed" )
   {
     setup();
   }
